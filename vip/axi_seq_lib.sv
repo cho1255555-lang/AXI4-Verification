@@ -1,0 +1,39 @@
+class axi_base_seq extends uvm_sequence#(axi_base_item);
+    `uvm_object_utils(axi_base_seq)
+
+    axi_cfg cfg;
+
+    function new(string name="axi_base_seq");
+        super.new(name);
+    endfunction
+
+    task body();
+        if(!uvm_config_db#(axi_cfg)::get(null,get_full_name(),"cfg",cfg))
+            `uvm_fatal("CFG", "can't find cfg value")
+    endtask
+
+endclass
+
+class hs_rand_seq extends axi_base_seq;
+    `uvm_object_utils(hs_rand_seq)
+
+    function new(string name = "hs_rand_seq");
+        super.new(name);
+    endfunction
+
+    task body();
+        super.body();
+        repeat(cfg.seq_rep) begin
+            req = axi_base_item::type_id::create("req");
+            req.cfg = this.cfg;
+            start_item(req);
+            if(!req.randomize() with {len==0; burst == BURST_INCR;
+                dir dist {AXI_WRITE:=60, AXI_READ:=40};})
+                    `uvm_error("RAND","randomize error")
+            finish_item(req);
+            `uvm_info("ITEM INFO",req.convert2string(),UVM_LOW);
+        end
+    endtask
+endclass
+            
+
