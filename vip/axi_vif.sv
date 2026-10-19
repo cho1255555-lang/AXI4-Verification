@@ -3,39 +3,58 @@ interface axi_vif (input logic aclk, input logic areset_n);
     import axi_vip_pkg::*;
 
 	// Read Address Channel
-	addr_t araddr;
-	logic arvalid;
-	logic arready;
-	len_t arlen;
-	size_t arsize;
-	burst_e arburst;
+	id_t 		arid;
+	addr_t 		araddr;
+	len_t 		arlen;
+	size_t 		arsize;
+	burst_e 	arburst;
+	logic       arlock;
+    logic [3:0] arcache;
+    logic [2:0] arprot;
+    logic [3:0] arqos;
+    logic [3:0] arregion;
+    user_t      aruser;
+	logic 		arvalid;
+	logic 		arready;
 
 	// Read Data Channel
-	data_t rdata;
-	resp_t rresp;
-	logic rvalid;
-	logic rready;
-	logic rlast;
+	id_t        rid;
+	data_t 		rdata;
+	resp_t 		rresp;
+	user_t      ruser;
+	logic 		rvalid;
+	logic 		rready;
+	logic 		rlast;
 
 	// Write Address Channel
-	addr_t awaddr;
-	logic awvalid;
-	logic awready;
-	len_t awlen;
-	size_t awsize;
-	burst_e awburst;
+	id_t		awid;
+	addr_t 		awaddr;
+	len_t 		awlen;
+	size_t 		awsize;
+	burst_e 	awburst;
+	logic       awlock;
+    logic [3:0] awcache;
+    logic [2:0] awprot;
+    logic [3:0] awqos;
+    logic [3:0] awregion;
+    user_t      awuser;
+	logic 		awvalid;
+	logic 		awready;
 
 	// Write Data Channel
-	data_t wdata;
-	strb_t wstrb;
-	logic wvalid;
-	logic wready;
-	logic wlast;
+	data_t 		wdata;
+	strb_t 		wstrb;
+	user_t      wuser;
+	logic 		wvalid;
+	logic 		wready;
+	logic		wlast;
 
 	// Write Response Channel
-	resp_t bresp;
-	logic bvalid;
-	logic bready;
+	id_t        bid;
+    resp_t      bresp;
+    user_t      buser;
+    logic       bvalid;
+    logic       bready;
 
 	clocking drv_cb @(posedge aclk);
 		default input #1step output #1ns;

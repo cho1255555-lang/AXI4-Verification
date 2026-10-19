@@ -2,7 +2,7 @@
 `define AXI_DEFINES_SVH
 
 `ifndef AXI_ADDR_W
-`define AXI_ADDR_W 32
+`define AXI_ADDR_W 16
 `endif
 
 `ifndef AXI_DATA_W
