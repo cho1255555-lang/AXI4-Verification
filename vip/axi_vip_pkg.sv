@@ -25,6 +25,7 @@ package axi_vip_pkg;
     `include "axi_sequencer.sv"
     `include "axi_driver.sv"
     `include "axi_monitor.sv"
+    `include "axi_coverage.sv"
     `include "axi_agent.sv"
     `include "axi_env.sv"
     `include "axi_base_test.sv"

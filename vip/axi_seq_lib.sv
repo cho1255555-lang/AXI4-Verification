@@ -31,7 +31,7 @@ class hs_rand_seq extends axi_base_seq;
                 dir dist {AXI_WRITE:=60, AXI_READ:=40};})
                     `uvm_error("RAND","randomize error")
             finish_item(req);
-            `uvm_info("ITEM INFO",req.convert2string(),UVM_LOW);
+            `uvm_info("ITEM_INFO",{req.convert2string(),"\n",req.delay_print()},UVM_LOW);
         end
     endtask
 endclass

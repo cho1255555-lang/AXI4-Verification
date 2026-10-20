@@ -1,3 +1,14 @@
+// ============================================================
+// axi_protocol_checker
+//  - DUT가 아니라 vif(버스)에 연결하는 VIP 쪽 checker
+//  - tb_top에서 직접 인스턴스 : .s_axi(vif)
+//  - DUT가 바뀌어도 이 파일은 그대로
+//
+// [한계 - outstanding 지원 시 수정 필요]
+//  - r_len_q, w_len_q가 AR/AW마다 덮어써짐
+//    → 여러 burst가 동시에 진행되면 이전 len을 잃어버림 (큐로 바꿔야 함)
+// ============================================================
+
 module axi_protocol_checker #(
     parameter int MAX_WAIT = 100           // 응답을 기다릴 최대 사이클
 )(
@@ -81,24 +92,31 @@ module axi_protocol_checker #(
     // =========================================================
     // 5. payload 안정성 (5개 채널)
     // =========================================================
+    // AW, AR : awid/arid는 아직 driver가 구동하지 않음
+    //          → ID를 clocking block에 추가할 때 payload에 함께 추가
     AW_STABLE : assert property (p_payload_stable(s_axi.awvalid, s_axi.awready,
                     {s_axi.awaddr, s_axi.awlen, s_axi.awsize, s_axi.awburst}))
         else `uvm_error("AXI_CHK", "AW payload changed while waiting")
+
     W_STABLE  : assert property (p_payload_stable(s_axi.wvalid, s_axi.wready,
-                    {s_axi.wdata, s_axi.wlast}))   // wstrb가 있으면 추가
+                    {s_axi.wdata, s_axi.wstrb, s_axi.wlast}))          // wstrb 추가
         else `uvm_error("AXI_CHK", "W payload changed while waiting")
+
     B_STABLE  : assert property (p_payload_stable(s_axi.bvalid, s_axi.bready,
-                    s_axi.bresp))
+                    {s_axi.bid, s_axi.bresp}))                          // bid 추가
         else `uvm_error("AXI_CHK", "B payload changed while waiting")
+
     AR_STABLE : assert property (p_payload_stable(s_axi.arvalid, s_axi.arready,
                     {s_axi.araddr, s_axi.arlen, s_axi.arsize, s_axi.arburst}))
         else `uvm_error("AXI_CHK", "AR payload changed while waiting")
+
     R_STABLE  : assert property (p_payload_stable(s_axi.rvalid, s_axi.rready,
-                    {s_axi.rdata, s_axi.rresp, s_axi.rlast}))
+                    {s_axi.rid, s_axi.rdata, s_axi.rresp, s_axi.rlast}))  // rid 추가
         else `uvm_error("AXI_CHK", "R payload changed while waiting")
 
     // =========================================================
     // 6. LAST 위치 검사 (single이든 burst든 마지막 beat에서만 1)
+    //    handshake 시점에만 검사 → valid=0일 때의 rlast 값은 보지 않음
     // =========================================================
     R_LAST_CHK : assert property (r_hs |-> (s_axi.rlast == (r_beat_cnt == r_len_q)))
         else `uvm_error("AXI_CHK", $sformatf("RLAST wrong: beat=%0d, arlen=%0d, rlast=%0b",

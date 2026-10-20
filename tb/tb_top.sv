@@ -2,7 +2,7 @@
 
 `include "axi_vip_pkg.sv"
 `include "axi_vif.sv"
-//`include "axi_protocol_checker"
+`include "axi_protocol_checker.sv"
 
 module tb_top;
 
@@ -70,7 +70,11 @@ module tb_top;
     assign vif.ruser = '0;
 
 //    axi_slave u_dut(.aclk(aclk),.areset_n(areset_n),.s_axi(vif.slave)); 
-//    bind axi_slave axi_protocol_checker #(.MAX_WAIT(10)) u_chk (.*);
+    axi_protocol_checker #(.MAX_WAIT(100)) u_chk (
+    .aclk     (aclk),
+    .areset_n (areset_n),
+    .s_axi    (vif)
+    );
 
     initial  aclk = 0;
     always #5 aclk = ~aclk;
