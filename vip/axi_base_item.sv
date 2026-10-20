@@ -30,6 +30,10 @@ class axi_base_item extends uvm_sequence_item;
 	//AW, W간에 의존성이 없지만 AR과 R, Write와 B사이엔 의존성 존재
 	//AR -> R 순서 Write -> B 순서로 의존성 존재 
 
+	time aw_time; //handshake 시점 coverage에 넘기기 위함
+	time w_time;
+	
+
 	constraint c_limit {
 		(1<<size) <= cfg.bus_width/8; //2^burst size 현재 dut size는 64bit
 	}

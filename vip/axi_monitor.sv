@@ -52,7 +52,6 @@ class axi_monitor extends uvm_monitor;
 
     task ar_mon();
         axi_base_item tr;
-        int unsigned wait_cnt;
         forever begin
             @(vif.mon_cb);
             if(vif.mon_cb.arready && vif.mon_cb.arvalid) begin
@@ -62,12 +61,8 @@ class axi_monitor extends uvm_monitor;
                 tr.len = vif.mon_cb.arlen;
                 tr.size = vif.mon_cb.arsize;
                 tr.burst = burst_e'(vif.mon_cb.arburst);
-                tr.ar_delay = wait_cnt;
                 ar_q.push_back(tr);
-                wait_cnt = 0;
-            end
-            else if(vif.mon_cb.arvalid) begin
-                wait_cnt++;   
+
             end
         end
     endtask
@@ -75,7 +70,6 @@ class axi_monitor extends uvm_monitor;
     task r_mon();
         axi_base_item tr;
         int unsigned wait_cnt;
-        
         forever begin        
             @(vif.mon_cb);
             if(vif.mon_cb.rready&& vif.mon_cb.rvalid) begin
@@ -88,7 +82,7 @@ class axi_monitor extends uvm_monitor;
                     tr.rresp = vif.mon_cb.rresp;
                     tr.r_delay = wait_cnt;
                     sending(tr);
-                    wait_cnt = 0;
+                    wait_cnt =0;
                 end
             end
             else if(vif.mon_cb.rvalid) begin
@@ -100,7 +94,6 @@ class axi_monitor extends uvm_monitor;
 
     task aw_mon();
         axi_base_item tr;
-        int unsigned wait_cnt;
         
         forever begin
             @(vif.mon_cb);
@@ -111,12 +104,9 @@ class axi_monitor extends uvm_monitor;
                 tr.len = vif.mon_cb.awlen;
                 tr.size = vif.mon_cb.awsize;
                 tr.burst = burst_e'(vif.mon_cb.awburst);
-                tr.aw_delay = wait_cnt;
+                tr.aw_time = $time();
                 aw_q.push_back(tr);
-                wait_cnt = 0;                                
-            end
-            else if(vif.mon_cb.awvalid) begin
-                wait_cnt++;
+                
             end
         end
 
@@ -124,7 +114,6 @@ class axi_monitor extends uvm_monitor;
 
     task w_mon();
         axi_base_item tr;
-        int unsigned wait_cnt;
 
         forever begin
             @(vif.mon_cb);
@@ -133,12 +122,9 @@ class axi_monitor extends uvm_monitor;
                 tr.dir = AXI_WRITE;
                 tr.wdata = vif.mon_cb.wdata;
                 tr.wstrb = vif.mon_cb.wstrb;
-                tr.w_delay = wait_cnt;
+                tr.w_time = $time();
                 w_q.push_back(tr);  
-                wait_cnt = 0;                      
-            end
-            else if(vif.mon_cb.wvalid) begin
-                wait_cnt++;
+                
             end
         end
     endtask
@@ -147,7 +133,6 @@ class axi_monitor extends uvm_monitor;
     task b_mon();
         axi_base_item tr, temp_tr;
         int unsigned wait_cnt;
-
         forever begin
             @(vif.mon_cb);
             if(vif.mon_cb.bready && vif.mon_cb.bvalid) begin
@@ -159,16 +144,18 @@ class axi_monitor extends uvm_monitor;
                     temp_tr = w_q.pop_front();
                     tr.wdata = temp_tr.wdata;
                     tr.wstrb = temp_tr.wstrb;
-                    tr.w_delay = temp_tr.w_delay;
+                    tr.w_time = temp_tr.w_time;  
                     tr.bresp = vif.mon_cb.bresp;
                     tr.b_delay = wait_cnt;
-                    sending(tr);                    
+                    sending(tr);
+                    `uvm_info("MON_DBG", $sformatf("aw_time=%0t w_time=%0t", tr.aw_time, tr.w_time), UVM_LOW)
                end
                wait_cnt = 0;
             end
             else if(vif.mon_cb.bvalid) begin
                 wait_cnt++;
             end
+
         end
     endtask
 
@@ -191,6 +178,3 @@ class axi_monitor extends uvm_monitor;
 
 
 endclass
-                
-
-            
