@@ -48,9 +48,11 @@ class axi_driver extends uvm_driver #(axi_base_item);
         vif.drv_cb.arvalid <=0; //driver에서 dut로 drive할 signal들 reset
         vif.drv_cb.rready <=0;
         vif.drv_cb.awvalid <=0;
+        vif.drv_cb.wstrb <=0;
         vif.drv_cb.wvalid <=0;
         vif.drv_cb.wlast <=0;
-        vif.drv_cb.bready <=0;
+        vif.drv_cb.bready <=0;    
+
     endtask
     
     virtual task aw_drive(axi_base_item req);

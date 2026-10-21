@@ -11,15 +11,21 @@ class axi_base_item extends uvm_sequence_item;
 	rand len_t len;
 	rand size_t size;
 	rand burst_e burst;
+	
 
 	// Write Data 
-	rand data_t wdata;
-	rand strb_t wstrb;
+	rand data_t wdata[$];
+	strb_t wstrb[$];
 
 	//slave -> master
-	data_t rdata; 
-	resp_t rresp; 
+	data_t rdata[$]; 
+	resp_t rresp[$]; 
 	resp_t bresp;
+
+	rand id_t	arid;
+	id_t		rid;
+	rand id_t	awid;
+	id_t		bid;
 
 
 	rand int unsigned ar_delay; 
@@ -34,8 +40,16 @@ class axi_base_item extends uvm_sequence_item;
 	time w_time;
 	
 
-	constraint c_limit {
-		(1<<size) <= cfg.bus_width/8; //2^burst size 현재 dut size는 64bit
+	constraint bus_width_limit {
+		(1<<size) <= cfg.bus_width/8; //bus width에 맞춰 burst size constraint
+	}
+
+	constraint addr_limit{
+		addr <= (1<<cfg.addr_width)-1;
+	}
+
+	constraint c_queue_size{
+		wdata.size() == len+1;
 	}
 
 	constraint c_delay {
@@ -46,38 +60,62 @@ class axi_base_item extends uvm_sequence_item;
 		b_delay inside {[0:5]};
 	}
 
-	//valid 신호는 driver에서 구현 
+	constraint c_fixed{
+		if(burst == FIXED) {
+			len <= 15; //burst length fixed 기준 16beat까지가 최대 
+		}
+	}
+
+	constraint c_incr{
+		if(burst == INCR) {
+			((addr[11:0]>>size)<<size)+(1<<size)*(len+1) <= (1<<12); //0x1000 boundary constraint
+		} //spec A3-49page aligned address 수식 참조  
+	} 
+
+	constraint c_wrap{
+		if(burst == WRAP) {
+			addr == ((addr>>size)<<size); //aligned address 
+			len inside{1,3,7,15}; //AXI4 support WRAP burst length 2,4,8,16
+		}
+	}
 
 
 	function new(string name = "axi_base_item");
 		super.new(name);
 	endfunction
 
+	virtual 
+
 	virtual function string convert2string();
 		string s;
 
-		s = $sformatf("dir: %s, addr: 0x%0h, len: %0d, size: %0d, burst: %s",
-		 dir.name(), addr, len, size, burst.name());
+		s = $sformatf("dir: %s, id: 0x%0h, addr: 0x%0h, len: %0d(%0d beats), size: %0d(%0dB), burst: %s",
+						dir.name(), (dir == AXI_WRITE) ? awid : arid, addr,
+						len, len + 1, size, 1 << size, burst.name());
 
-		 if(dir == AXI_WRITE) begin
-			s = {s,$sformatf(", wdata: 0x%0h, wstrb: 0x%0h, bresp: %0d",
-			  wdata, wstrb, bresp)};
-		 end
-		 else begin
-			s = {s, $sformatf(", rdata: 0x%0h, rresp: %0d", rdata, rresp)};
-		 end
+		if (dir == AXI_WRITE) begin
+			foreach (wdata[i])
+			s = {s, $sformatf("\n  beat[%0d] wdata: 0x%0h, wstrb: %b",
+								i, wdata[i], (i < wstrb.size()) ? wstrb[i] : '0)};
+			s = {s, $sformatf("\n  bresp: %0d", bresp)};
+		end
+		else begin
+			if (rdata.size() == 0)
+			s = {s, "\n  (no read data yet)"};
+			foreach (rdata[i])
+			s = {s, $sformatf("\n  beat[%0d] rdata: 0x%0h, rresp: %0d",
+								i, rdata[i], (i < rresp.size()) ? rresp[i] : '0)};
+		end
+
 		return s;
-	endfunction
+endfunction
 
 	virtual function string delay_print();
-		return $sformatf("ar: %d, r: %d, aw: %d, w: %d, b:%d",ar_delay, r_delay,aw_delay,w_delay,b_delay);
+		return $sformatf("ar: %0d, r: %0d, aw: %0d, w: %0d, b:%0d",ar_delay, r_delay,aw_delay,w_delay,b_delay);
 	endfunction
 
     //pkg만들기, 나중에 config로 값을 넘겨서 target design에 맞춰
 	//주소 변환하기
 
-    //이후 extends해서 다양한 시나리오 만들기
+   
 endclass
-
-    
-    

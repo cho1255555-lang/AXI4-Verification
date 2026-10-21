@@ -7,7 +7,7 @@ class axi_base_seq extends uvm_sequence#(axi_base_item);
         super.new(name);
     endfunction
 
-    task body();
+    virtual task body();
         if(!uvm_config_db#(axi_cfg)::get(null,get_full_name(),"cfg",cfg))
             `uvm_fatal("CFG", "can't find cfg value")
     endtask
@@ -21,7 +21,7 @@ class hs_rand_seq extends axi_base_seq;
         super.new(name);
     endfunction
 
-    task body();
+    virtual task body();
         super.body();
         repeat(cfg.seq_rep) begin
             req = axi_base_item::type_id::create("req");
@@ -35,5 +35,31 @@ class hs_rand_seq extends axi_base_seq;
         end
     endtask
 endclass
+
+class multi_beat_seq extends axi_base_item;
+    `uvm_object_utils(mul_beat_seq)
+    
+    function new(string name = "mul_beat_seq");
+        super.new();
+    endfunction
+
+    virtual task body();
+        super.body();
+        repeat(cfg.seq_rep) begin
+            req = axi_base_item::type_id::create("req");
+            req.cfg = this.cfg;
+            strat_item(req);
+            if(!req.randomize() with {
+                burst dist {INCR:50, WRAP:50};
+                dir dist {AXI_WRITE:=60, AXI_READ:40};
+                }) begin
+                `uvm_error("RAND","randmonize error")
+            end
+            finish_item(req);
+            `uvm_info("ITEM_INFO",req.convert2string(),UVM_LOW);
+        end
+    endtask
+endclass
+
             
 
