@@ -25,7 +25,7 @@ module tb_top;
         .rst            (~areset_n),        // DUT는 active high reset
  
         // AW
-        .s_axi_awid     (0), // 나중에 ID 검증 필요할 때 씀
+        .s_axi_awid     (vif.awid), // 나중에 ID 검증 필요할 때 씀
         .s_axi_awaddr   (vif.awaddr),
         .s_axi_awlen    (vif.awlen),
         .s_axi_awsize   (vif.awsize),
@@ -47,7 +47,7 @@ module tb_top;
         .s_axi_bvalid   (vif.bvalid),
         .s_axi_bready   (vif.bready),
         // AR
-        .s_axi_arid     ('0),
+        .s_axi_arid     (vif.arid),
         .s_axi_araddr   (vif.araddr),
         .s_axi_arlen    (vif.arlen),
         .s_axi_arsize   (vif.arsize),

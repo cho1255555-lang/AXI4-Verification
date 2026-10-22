@@ -40,6 +40,7 @@ class axi_base_item extends uvm_sequence_item;
 	time w_time;
 	
 
+	
 	constraint bus_width_limit {
 		(1<<size) <= cfg.bus_width/8; //bus width에 맞춰 burst size constraint
 	}
@@ -60,22 +61,20 @@ class axi_base_item extends uvm_sequence_item;
 		b_delay inside {[0:5]};
 	}
 
-	constraint c_fixed{
-		if(burst == FIXED) {
-			len <= 15; //burst length fixed 기준 16beat까지가 최대 
-		}
+	constraint c_burst {
+		burst != RESERVED;
 	}
 
-	constraint c_incr{
-		if(burst == INCR) {
-			((addr[11:0]>>size)<<size)+(1<<size)*(len+1) <= (1<<12); //0x1000 boundary constraint
-		} //spec A3-49page aligned address 수식 참조  
-	} 
-
-	constraint c_wrap{
-		if(burst == WRAP) {
-			addr == ((addr>>size)<<size); //aligned address 
-			len inside{1,3,7,15}; //AXI4 support WRAP burst length 2,4,8,16
+	constraint c_burst_len {
+		if (burst == FIXED) {
+			len <= 15;
+		}
+		else if (burst == INCR) {
+			((addr[11:0]>>size)<<size)+(1<<size)*(len+1) <= (1<<12);
+		}
+		else if (burst == WRAP) {
+			addr == ((addr>>size)<<size);
+			len inside {1,3,7,15};
 		}
 	}
 

@@ -36,7 +36,8 @@ class axi_rand_test extends axi_base_test;
     endfunction
 
     virtual task run_phase(uvm_phase phase);
-        hs_rand_seq seq;
+        multi_beat_seq seq;
+      	//hs_rand_seq seq;
         phase.raise_objection(this);
         //seq = hs_rand_seq::type_id::create("seq");
         seq = multi_beat_seq::type_id::create("seq");

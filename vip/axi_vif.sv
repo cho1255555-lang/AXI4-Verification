@@ -60,13 +60,13 @@ interface axi_vif (input logic aclk, input logic areset_n);
 		default input #1step output #1ns;
 		
 		input arready;
-		input rdata, rresp, rvalid, rlast;
+		input rdata, rresp, rvalid, rlast, rid;
 		input awready;
-		input wready, bresp, bvalid;
+		input wready, bresp, bvalid, bid;
 		
-		output araddr, arvalid, arlen, arsize, arburst;
+		output araddr, arvalid, arlen, arsize, arburst, arid;
 		output rready;
-		output awaddr, awvalid, awlen, awsize, awburst;
+		output awaddr, awvalid, awlen, awsize, awburst, awid;
 		output wdata, wstrb, wvalid, wlast;
 		output bready;
 	endclocking
@@ -74,11 +74,11 @@ interface axi_vif (input logic aclk, input logic areset_n);
 	clocking mon_cb @(posedge aclk); // master, slave 신호 모두 monitoring 하기 위함
 		default input #1step;
 		
-		input araddr, arvalid, arready, arlen, arsize, arburst; //read address channel
-		input rdata, rresp, rvalid, rready, rlast; //read data channel
-		input awaddr, awvalid, awready, awlen, awsize, awburst; // write address channel
+		input araddr, arvalid, arready, arlen, arsize, arburst, arid; //read address channel
+		input rdata, rresp, rvalid, rready, rlast, rid; //read data channel
+		input awaddr, awvalid, awready, awlen, awsize, awburst, awid; // write address channel
 		input wdata, wstrb, wvalid, wready, wlast; //write data channel
-		input bresp, bvalid, bready; //write response channel
+		input bresp, bvalid, bready, bid; //write response channel
 	endclocking
 
 

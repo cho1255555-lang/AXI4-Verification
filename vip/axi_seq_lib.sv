@@ -27,7 +27,7 @@ class hs_rand_seq extends axi_base_seq;
             req = axi_base_item::type_id::create("req");
             req.cfg = this.cfg;
             start_item(req);
-            if(!req.randomize() with {len==0; burst == BURST_INCR;
+            if(!req.randomize() with {len==0; burst == INCR;
                 dir dist {AXI_WRITE:=60, AXI_READ:=40};})
                     `uvm_fatal("RAND","randomize error")
             finish_item(req);

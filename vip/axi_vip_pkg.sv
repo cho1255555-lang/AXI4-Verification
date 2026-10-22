@@ -15,7 +15,7 @@ package axi_vip_pkg;
     typedef bit [2:0] size_t;
     typedef bit [1:0] resp_t;
     typedef bit [1:0] user_t;
-    typedef enum bit [1:0] {BURST_FIXED, BURST_INCR, BURST_WRAP} burst_e;
+    typedef enum bit [1:0] {FIXED, INCR, WRAP, RESERVED} burst_e;
     typedef enum bit {AXI_READ, AXI_WRITE} dir_e;
 
     
