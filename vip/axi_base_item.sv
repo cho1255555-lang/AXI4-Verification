@@ -84,7 +84,56 @@ class axi_base_item extends uvm_sequence_item;
 		super.new(name);
 	endfunction
 
-	virtual 
+
+	function void post_randomize();
+		make_wstrb();
+	endfunction
+
+	virtual function void make_wstrb();
+		wstrb.delete();
+		for(int i=0;i<len+1;i++) begin
+			wstrb.push_back(calc_wstrb(i));
+		end
+	endfunction
+
+	virtual function strb_t calc_wstrb(int unsigned n);
+		addr_t a;
+		int unsigned lo, hi;
+		a = calc_addr(n);
+		lo = a % $bits(strb_t);
+		hi = (((a >> size) << size) % $bits(strb_t)) + (1<<size) - 1;
+		return (strb_t'(1) << (hi + 1)) - (strb_t'(1) << lo);
+	endfunction
+
+	virtual function addr_t aligned_addr();
+		return ((addr>>size)<<size); 
+	endfunction
+	
+	virtual function addr_t wrap_boundary();
+		int unsigned total = (1<<size)*(len+1);
+		return (addr / total) * total;
+	endfunction
+
+	virtual function addr_t calc_addr(int unsigned n);
+		addr_t a;
+		int unsigned total;
+		case(burst)
+			FIXED : a = addr;
+			INCR  : a = (n==0)? addr:(aligned_addr() + n*(1<<size));
+			WRAP  : begin
+				total = (1<<size)*(len+1);
+				a = addr+n*(1<<size);
+				if(a>=wrap_boundary()+total) begin
+					a= a-total;
+				end
+			end
+			default : a = addr;
+			
+		endcase
+		return a;
+	endfunction
+		
+		
 
 	virtual function string convert2string();
 		string s;

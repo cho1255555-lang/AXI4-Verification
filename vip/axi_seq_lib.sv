@@ -29,18 +29,18 @@ class hs_rand_seq extends axi_base_seq;
             start_item(req);
             if(!req.randomize() with {len==0; burst == BURST_INCR;
                 dir dist {AXI_WRITE:=60, AXI_READ:=40};})
-                    `uvm_error("RAND","randomize error")
+                    `uvm_fatal("RAND","randomize error")
             finish_item(req);
             `uvm_info("ITEM_INFO",{req.convert2string(),"\n",req.delay_print()},UVM_LOW);
         end
     endtask
 endclass
 
-class multi_beat_seq extends axi_base_item;
-    `uvm_object_utils(mul_beat_seq)
+class multi_beat_seq extends axi_base_seq;
+    `uvm_object_utils(multi_beat_seq)
     
-    function new(string name = "mul_beat_seq");
-        super.new();
+    function new(string name = "multi_beat_seq");
+        super.new(name);
     endfunction
 
     virtual task body();
@@ -48,12 +48,16 @@ class multi_beat_seq extends axi_base_item;
         repeat(cfg.seq_rep) begin
             req = axi_base_item::type_id::create("req");
             req.cfg = this.cfg;
-            strat_item(req);
+            start_item(req);
             if(!req.randomize() with {
-                burst dist {INCR:50, WRAP:50};
-                dir dist {AXI_WRITE:=60, AXI_READ:40};
+                arid ==0;
+                awid ==0;
+                size ==2;
+                len > 0;                
+                burst dist {INCR:=50, WRAP:=50};
+                dir dist {AXI_WRITE:=60, AXI_READ:=40};
                 }) begin
-                `uvm_error("RAND","randmonize error")
+                `uvm_fatal("RAND","randmonize error")
             end
             finish_item(req);
             `uvm_info("ITEM_INFO",req.convert2string(),UVM_LOW);
