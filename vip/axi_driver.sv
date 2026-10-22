@@ -46,35 +46,39 @@ class axi_driver extends uvm_driver #(axi_base_item);
 
     virtual task sig_reset();
         vif.drv_cb.arvalid <=0; //driver에서 dut로 drive할 signal들 reset
-        vif.drv_cb.rready <=0;
+        vif.drv_cb.rready  <=0;
         vif.drv_cb.awvalid <=0;
-        vif.drv_cb.wstrb <=0;
-        vif.drv_cb.wvalid <=0;
-        vif.drv_cb.wlast <=0;
-        vif.drv_cb.bready <=0;    
+        vif.drv_cb.wstrb   <=0;
+        vif.drv_cb.wvalid  <=0;
+        vif.drv_cb.wlast   <=0;
+        vif.drv_cb.bready  <=0;    
 
     endtask
     
     virtual task aw_drive(axi_base_item req);
         repeat(req.aw_delay) @(vif.drv_cb);
         vif.drv_cb.awvalid <= 1'b1; //awvalid assert
-        vif.drv_cb.awaddr <= req.addr;
-        vif.drv_cb.awlen <= req.len;
-        vif.drv_cb.awsize <= req.size;
+        vif.drv_cb.awaddr  <= req.addr;
+        vif.drv_cb.awlen   <= req.len;
+        vif.drv_cb.awsize  <= req.size;
         vif.drv_cb.awburst <= req.burst;
+        vif.drv_cb.awid    <= req.awid;
         do @(vif.drv_cb); while(vif.drv_cb.awready !== 1'b1); //handshake가 일어날 때까지 기다림
         vif.drv_cb.awvalid <= 1'b0;
     endtask
 
     virtual task w_drive(axi_base_item req);
         repeat(req.w_delay) @(vif.drv_cb);
-        vif.drv_cb.wvalid <= 1'b1;
-        vif.drv_cb.wlast <= 1'b1;
-        vif.drv_cb.wdata <= req.wdata;
-        vif.drv_cb.wstrb <= req.wstrb;
-        do @(vif.drv_cb); while(vif.drv_cb.wready !== 1'b1);
-        vif.drv_cb.wvalid <=1'b0;
-        vif.drv_cb.wlast <= 1'b0; //signle transfer기 때문에 transaction 마다 assert busrt test시 마지막 transaction에만 last signal assert 
+        
+        for(int i=0;i<req.len+1;i++) begin
+            vif.drv_cb.wvalid <= 1'b1;
+            vif.drv_cb.wdata  <= req.wdata[i];
+            vif.drv_cb.wlast  <= (i==req.len)?1'b1:1'b0;
+            vif.drv_cb.wstrb  <= req.wstrb[i];
+            do @(vif.drv_cb); while(vif.drv_cb.wready !== 1'b1);
+        end
+        vif.drv_cb.wvalid <= 1'b0;
+        vif.drv_cb.wlast  <= 1'b0; 
     endtask
 
     virtual task ar_drive(axi_base_item req);
@@ -84,25 +88,26 @@ class axi_driver extends uvm_driver #(axi_base_item);
         vif.drv_cb.arlen <= req.len;
         vif.drv_cb.arsize <= req.size;
         vif.drv_cb.arburst <= req.burst;
+        vif.drv_cb.arid <= req.arid;
         do @(vif.drv_cb); while(vif.drv_cb.arready !== 1'b1);
         vif.drv_cb.arvalid <= 1'b0;
     endtask
 
     virtual task r_drive(axi_base_item req); //r channel valid signal은 slave -> master 그래서 driver에선 ready 신호를 assert해야함
         repeat(req.r_delay) @(vif.drv_cb);
-        vif.drv_cb.rready <= 1'b1;
-        do @(vif.drv_cb); while(vif.drv_cb.rvalid !== 1'b1);
-        //item에 rdata, rresp 담음
-        req.rdata = vif.drv_cb.rdata;
-        req.rresp = vif.drv_cb.rresp;
-        vif.drv_cb.rready <= 1'b0;
-        
+        for(int i=0;i<req.len+1;i++) begin
+            vif.drv_cb.rready <= 1'b1;
+            do @(vif.drv_cb); while(vif.drv_cb.rvalid !== 1'b1);
+            //item에 rdata, rresp 담음
+            req.rdata.push_back(vif.drv_cb.rdata);
+            req.rresp.push_back(vif.drv_cb.rresp);
+            vif.drv_cb.rready <= 1'b0;
+        end   
     endtask
     
     virtual task b_drive(axi_base_item req); //b channel 또한 r channel과 동일하게 driver에서 ready 신호를 assert 해야함
         repeat(req.b_delay) @(vif.drv_cb);
-        vif.drv_cb.bready <= 1'b1;
-        
+        vif.drv_cb.bready <= 1'b1; 
         do @(vif.drv_cb); while(vif.drv_cb.bvalid !== 1'b1);
         req.bresp = vif.drv_cb.bresp;
         vif.drv_cb.bready <= 1'b0;
