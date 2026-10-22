@@ -53,7 +53,8 @@ class multi_beat_seq extends axi_base_seq;
                 arid ==0;
                 awid ==0;
                 size ==2;
-                len > 0;                
+                len > 0;
+                is_aligned dist {1 := 70, 0 := 30};                
                 burst dist {INCR:=50, WRAP:=50};
                 dir dist {AXI_WRITE:=60, AXI_READ:=40};
                 }) begin

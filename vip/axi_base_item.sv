@@ -39,7 +39,12 @@ class axi_base_item extends uvm_sequence_item;
 	time aw_time; //handshake 시점 coverage에 넘기기 위함
 	time w_time;
 	
+	rand bit is_aligned;
 
+	constraint c_align {
+		solve is_aligned before addr;
+		if (is_aligned) addr == ((addr >> size) << size);
+	}	
 	
 	constraint bus_width_limit {
 		(1<<size) <= cfg.bus_width/8; //bus width에 맞춰 burst size constraint
