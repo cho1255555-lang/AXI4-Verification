@@ -60,6 +60,7 @@ class axi_monitor extends uvm_monitor;
                 tr.addr = vif.mon_cb.araddr;
                 tr.len = vif.mon_cb.arlen;
                 tr.size = vif.mon_cb.arsize;
+                tr.arid = vif.mon_cb.arid;
                 tr.burst = burst_e'(vif.mon_cb.arburst);
                 ar_q.push_back(tr);
 
@@ -73,21 +74,29 @@ class axi_monitor extends uvm_monitor;
         forever begin        
             @(vif.mon_cb);
             if(vif.mon_cb.rready&& vif.mon_cb.rvalid) begin
-                if(ar_q.size()==0) begin
-                    `uvm_error("MONERROR","No tr in ar_q")
-                end
-                else begin
+                if(tr==null) begin
+                    if(ar_q.size()==0) begin
+                        `uvm_error("MONERROR","No tr in ar_q")
+                    end
+                    else begin
                     tr = ar_q.pop_front();
-                    tr.rdata = vif.mon_cb.rdata;
-                    tr.rresp = vif.mon_cb.rresp;
-                    tr.r_delay = wait_cnt;
-                    sending(tr);
-                    wait_cnt =0;
+                    end
                 end
+                if(tr != null) begin 
+                    tr.rdata.push_back(vif.mon_cb.rdata);
+                    tr.rresp.push_back(vif.mon_cb.rresp);
+                    tr.rid = vif.mon_cb.rid;
+                    tr.r_delay = wait_cnt;
+                    if(vif.mon_cb.rlast) begin
+                        sending(tr);
+                        wait_cnt =0;
+                        tr = null;
+                    end
+                end          
             end
             else if(vif.mon_cb.rvalid) begin
                 wait_cnt++;
-            end
+            end  
         end
     endtask
 
@@ -118,12 +127,17 @@ class axi_monitor extends uvm_monitor;
         forever begin
             @(vif.mon_cb);
                 if(vif.mon_cb.wready && vif.mon_cb.wvalid) begin                    
-                tr = axi_base_item::type_id::create("tr");
-                tr.dir = AXI_WRITE;
-                tr.wdata = vif.mon_cb.wdata;
-                tr.wstrb = vif.mon_cb.wstrb;
-                tr.w_time = $time();
-                w_q.push_back(tr);  
+                if(tr==null) begin
+                    tr = axi_base_item::type_id::create("tr");
+                    tr.dir = AXI_WRITE;
+                    tr.w_time = $time();
+                end
+                tr.wdata.push_back(vif.mon_cb.wdata);
+                tr.wstrb.push_back(vif.mon_cb.wstrb);                
+                if(vif.mon_cb.wlast) begin
+                    w_q.push_back(tr);
+                    tr = null;  
+                end
                 
             end
         end
@@ -146,6 +160,7 @@ class axi_monitor extends uvm_monitor;
                     tr.wstrb = temp_tr.wstrb;
                     tr.w_time = temp_tr.w_time;  
                     tr.bresp = vif.mon_cb.bresp;
+                    tr.bid = vif.mon_cb.bid;
                     tr.b_delay = wait_cnt;
                     sending(tr);
                     `uvm_info("MON_DBG", $sformatf("aw_time=%0t w_time=%0t", tr.aw_time, tr.w_time), UVM_LOW)
