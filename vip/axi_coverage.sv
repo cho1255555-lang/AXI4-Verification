@@ -177,24 +177,25 @@ class axi_coverage extends uvm_subscriber #(axi_base_item);
     endfunction 
     
     
-    virtual function void report_phase(uvm_phase phase);
-        int  covered, total;
-        real pct;
- 
+     virtual function void report_phase(uvm_phase phase);
         super.report_phase(phase);
-        /*
+
         //---------------------handshake---------------------
         `uvm_info("COV", $sformatf("handshake coverage total : %0.2f%%", cg_hs.get_inst_coverage()), UVM_LOW)
- 
-        //coverpoint마다 bin의 coverage를 확인하기 위함
+
+        //---------------------burst---------------------
+        `uvm_info("COV", $sformatf("burst coverage total : %0.2f%%", multi_beat.get_inst_coverage()), UVM_LOW)
+
+        /*
+        // xsim : coverpoint 단위 get_inst_coverage(covered, total) 호출 시 kernel crash → 세부는 xcrg HTML로 확인
+        int  covered, total;   // ← 주석을 풀 때는 이 선언을 함수 맨 위로 옮길 것
+        real pct;
+
         pct = cg_hs.cp_dir.get_inst_coverage(covered, total);       print_cp("cp_dir",       pct, covered, total);
         pct = cg_hs.cp_b_delay.get_inst_coverage(covered, total);   print_cp("cp_b_delay",   pct, covered, total);
         pct = cg_hs.cp_r_delay.get_inst_coverage(covered, total);   print_cp("cp_r_delay",   pct, covered, total);
         pct = cg_hs.cp_aw_timing.get_inst_coverage(covered, total); print_cp("cp_aw_timing", pct, covered, total);
- 
-        //---------------------burst---------------------
-        `uvm_info("COV", $sformatf("burst coverage total : %0.2f%%", multi_beat.get_inst_coverage()), UVM_LOW)
- 
+
         pct = multi_beat.cp_strb.get_inst_coverage(covered, total);                 print_cp("cp_strb",                 pct, covered, total);
         pct = multi_beat.cp_w_size.get_inst_coverage(covered, total);               print_cp("cp_w_size",               pct, covered, total);
         pct = multi_beat.cp_r_size.get_inst_coverage(covered, total);               print_cp("cp_r_size",               pct, covered, total);
@@ -214,10 +215,6 @@ class axi_coverage extends uvm_subscriber #(axi_base_item);
         pct = multi_beat.cx_r_incr_size_aligned.get_inst_coverage(covered, total);  print_cp("cx_r_incr_size_aligned",  pct, covered, total);
         pct = multi_beat.cx_w_fixed_size_aligned.get_inst_coverage(covered, total); print_cp("cx_w_fixed_size_aligned", pct, covered, total);
         */
-    endfunction
- 
-    function void print_cp(string name, real pct, int covered, int total);
-        `uvm_info("COV", $sformatf("  %-24s : %6.2f%% (%0d/%0d bins)", name, pct, covered, total), UVM_LOW)
     endfunction
    
     
