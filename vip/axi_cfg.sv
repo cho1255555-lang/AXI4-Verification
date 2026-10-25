@@ -7,7 +7,7 @@ class axi_cfg extends uvm_object;
     
     
 
-    bit has_coverage = 0; //coverage on,off 설정
+    bit has_coverage = 1; //coverage on,off 설정
 
     function new(string name = "axi_cfg");
         super.new(name);
