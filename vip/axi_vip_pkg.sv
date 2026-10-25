@@ -27,6 +27,7 @@ package axi_vip_pkg;
     `include "axi_monitor.sv"
     `include "axi_coverage.sv"
     `include "axi_agent.sv"
+    `include "axi_scoreboard.sv"
     `include "axi_env.sv"
     `include "axi_base_test.sv"
     
