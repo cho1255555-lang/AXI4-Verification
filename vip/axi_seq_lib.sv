@@ -23,7 +23,7 @@ class hs_rand_seq extends axi_base_seq;
 
     virtual task body();
         super.body();
-        repeat(cfg.seq_rep) begin
+        repeat(cfg.seq_rpt) begin
             req = axi_base_item::type_id::create("req");
             start_item(req);
             if(!req.randomize() with {len==0; burst == INCR;

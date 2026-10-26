@@ -174,7 +174,6 @@ class axi_coverage extends uvm_subscriber #(axi_base_item);
 
     virtual function void write(axi_base_item t);
         tr = t;
-        cg_hs.sample();
         multi_beat.sample();
     endfunction 
     
