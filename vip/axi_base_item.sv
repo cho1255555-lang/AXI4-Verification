@@ -1,6 +1,6 @@
 class axi_base_item extends uvm_sequence_item;
     `uvm_object_utils(axi_base_item)
-		
+
 	rand dir_e dir;
 
 	//master -> slave
@@ -165,8 +165,6 @@ endfunction
 		return $sformatf("ar: %0d, r: %0d, aw: %0d, w: %0d, b:%0d",ar_delay, r_delay,aw_delay,w_delay,b_delay);
 	endfunction
 
-    //pkg만들기, 나중에 config로 값을 넘겨서 target design에 맞춰
-	//주소 변환하기
 
    
 endclass
