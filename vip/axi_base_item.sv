@@ -1,8 +1,6 @@
 class axi_base_item extends uvm_sequence_item;
     `uvm_object_utils(axi_base_item)
-	
-	axi_cfg cfg;
-
+		
 	rand dir_e dir;
 
 	//master -> slave
@@ -47,11 +45,11 @@ class axi_base_item extends uvm_sequence_item;
 	}	
 	
 	constraint bus_width_limit {
-		(1<<size) <= cfg.bus_width/8; //bus width에 맞춰 burst size constraint
+		(1<<size) <= `AXI_DATA_W/8; //bus width에 맞춰 burst size constraint
 	}
 
 	constraint addr_limit{
-		addr <= (1<<cfg.addr_width)-1;
+		addr < (addr_t'(1) << `AXI_ADDR_W);
 	}
 
 	constraint c_queue_size{
