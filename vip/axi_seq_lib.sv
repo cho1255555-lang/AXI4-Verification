@@ -25,7 +25,6 @@ class hs_rand_seq extends axi_base_seq;
         super.body();
         repeat(cfg.seq_rep) begin
             req = axi_base_item::type_id::create("req");
-            req.cfg = this.cfg;
             start_item(req);
             if(!req.randomize() with {len==0; burst == INCR;
                 dir dist {AXI_WRITE:=60, AXI_READ:=40};})
@@ -45,20 +44,20 @@ class multi_beat_seq extends axi_base_seq;
 
     virtual task body();
         super.body();
-        repeat(cfg.seq_rep) begin
+        prefill();
+        repeat(cfg.seq_rpt) begin
             req = axi_base_item::type_id::create("req");
-            req.cfg = this.cfg;
             start_item(req);
             if(!req.randomize() with {
                 arid ==0;
                 awid ==0;
-                size ==2;
-                len inside {[1:5]};
-              	addr inside {[0:'h50]};
+                size inside {[cfg.min_size:cfg.max_size]}; 
+                len inside {[cfg.min_len:cfg.max_len]};
+                addr inside {[cfg.min_addr:cfg.max_addr]};
                 
-                is_aligned dist {1 := 70, 0 := 30};                
-                burst dist {INCR:=100, FIXED:=0};
-                dir dist {AXI_WRITE:=60, AXI_READ:=40};
+                is_aligned dist {1:=70, 0:=30};                
+                burst dist {INCR:=60, FIXED:=40};
+                dir dist {AXI_WRITE:=40, AXI_READ:=60};
                 }) begin
                 `uvm_fatal("RAND","randmonize error")
             end
@@ -66,7 +65,34 @@ class multi_beat_seq extends axi_base_seq;
             `uvm_info("ITEM_INFO",req.convert2string(),UVM_LOW);
         end
     endtask
+
+    virtual task prefill();
+        repeat(cfg.prefill_rpt) begin
+            req = axi_base_item::type_id::create("req");
+            start_item(req);
+            if(!req.randomize() with {
+                arid ==0;
+                awid ==0;
+                size inside {[cfg.min_size:cfg.max_size]}; 
+                len inside {[cfg.min_len:cfg.max_len]};
+                addr inside {[cfg.min_addr:cfg.max_addr]};
+                
+                is_aligned dist {1:=60, 0:=40};   
+                burst == INCR;
+                dir == AXI_WRITE;
+                }) begin
+                `uvm_fatal("RAND","randmonize error")
+            end
+            finish_item(req);
+            `uvm_info("ITEM_INFO",req.convert2string(),UVM_LOW);
+        end
+
+    endtask
+
+
 endclass
+
+
 
             
 

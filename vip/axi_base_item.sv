@@ -1,7 +1,7 @@
 class axi_base_item extends uvm_sequence_item;
     `uvm_object_utils(axi_base_item)
 
-	axi_cfg cfg;
+	//axi_cfg cfg;
 
 	rand dir_e dir;
 
