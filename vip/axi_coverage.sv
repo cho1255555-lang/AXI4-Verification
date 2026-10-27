@@ -166,14 +166,13 @@ class axi_coverage extends uvm_subscriber #(axi_base_item);
 
     function new(string name, uvm_component parent);
         super.new(name, parent);
-        if(tr.len==0) begin
-            cg_hs = new();
-        end
+        cg_hs = new();
         multi_beat = new();
     endfunction 
 
     virtual function void write(axi_base_item t);
         tr = t;
+        cg_hs.sample();
         multi_beat.sample();
     endfunction 
     
