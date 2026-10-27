@@ -127,18 +127,17 @@ class axi_monitor extends uvm_monitor;
         forever begin
             @(vif.mon_cb);
                 if(vif.mon_cb.wready && vif.mon_cb.wvalid) begin                    
-                if(tr==null) begin
-                    tr = axi_base_item::type_id::create("tr");
-                    tr.dir = AXI_WRITE;
-                    tr.w_time = $time();
-                end
-                tr.wdata.push_back(vif.mon_cb.wdata);
-                tr.wstrb.push_back(vif.mon_cb.wstrb);                
-                if(vif.mon_cb.wlast) begin
-                    w_q.push_back(tr);
-                    tr = null;  
-                end
-                
+                    if(tr==null) begin
+                        tr = axi_base_item::type_id::create("tr");
+                        tr.dir = AXI_WRITE;
+                        tr.w_time = $time();
+                    end
+                    tr.wdata.push_back(vif.mon_cb.wdata);
+                    tr.wstrb.push_back(vif.mon_cb.wstrb);                
+                    if(vif.mon_cb.wlast) begin
+                        w_q.push_back(tr);
+                        tr = null;  
+                    end
             end
         end
     endtask
