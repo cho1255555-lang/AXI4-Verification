@@ -17,12 +17,16 @@
 - **Scripting**: Windows Batch (regression, log parsing, coverage merge)
 
 ## Architecture
+<img width="1280" height="720" alt="슬라이드1" src="https://github.com/user-attachments/assets/639a3b83-a88c-47da-8475-d173c9b772b2" />
 
 ## Key Features
-### Independent Channel Handshake
-### Burst Transaction
+#### Independent Channel Handshake
+#### Burst Transaction
 -FIXED
 -INCR
 -WRAP
-### Unaligned Transfer
-### Narrow Transfer
+#### Unaligned Transfer
+#### Narrow Transfer
+
+## Result
+<img width="1902" height="518" alt="image" src="https://github.com/user-attachments/assets/0a9079a8-b737-4417-8b2d-aa05b62f7d42" />
