@@ -37,7 +37,7 @@
 | 2 | Read Transaction Dependency | AR handshake 완료 전에는 RVALID가 assert되지 않음 | SVA | axi_base_test / hs_rand | 완료 | |
 | 3 | Write Transaction Dependency | W, AW handshake 완료 후 BVALID 신호 assert | SVA | axi_base_test / hs_rand | 완료 | |
 | 3-1 | W, AW handshake Timing | AW 선행, W 선행, 동시 handshake 3가지 경우 모두 발생 | Coverage | axi_base_test / hs_rand | 완료 | |
-| 4 | Write → Read | 쓴 데이터를 같은 주소에서 읽으면 일치 | Scoreboard | axi_base_test / multi_beat_rand | 완료 | |
+| 4 | Write → Read 데이터 무결성 | 쓴 데이터를 같은 주소에서 읽으면 일치 | Scoreboard | axi_base_test / multi_beat_rand | 완료 | |
 | 5 | Read/Write 병렬 | read와 write 채널 동시 구동 시 정상 동작 | Coverage + Scoreboard | - | 미진행 | Outstanding Transaction 검증 시 진행 |
 | 6 | Narrow transfer | size < bus width인 모든 size 발생 | Coverage + Scoreboard | axi_base_test / multi_beat_rand | 완료 | |
 | 7 | 주소 범위 | 생성된 주소가 DUT 주소 범위를 벗어나지 않고, 범위 내 모든 4KB 블록에 접근함 | Constraint + Coverage | axi_base_test / multi_beat_rand | 완료 | |
