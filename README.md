@@ -42,7 +42,7 @@
 | 6 | Narrow transfer | size < bus width인 모든 size 발생 | Coverage + Scoreboard | axi_base_test / multi_beat_rand | 완료 | |
 | 7 | 주소 범위 | 생성된 주소가 DUT 주소 범위를 벗어나지 않고, 범위 내 모든 4KB 블록에 접근함 | Constraint + Coverage | axi_base_test / multi_beat_rand | 완료 | |
 | 8 | 4KB boundary | INCR burst가 하나의 4KB 페이지를 넘지 않음 | Constraint + SVA | axi_base_test / multi_beat_rand | 완료 | |
-| 9 | Byte strobe | WSTRB 패턴에 따라 WSTRB=1인 유효한 lane만 저장 | Constraint + Scoreboard + Coverage | axi_base_test / multi_beat_rand | 완료 | |
+| 9 | Write strobe | WSTRB 패턴에 따라 WSTRB=1인 유효한 lane만 저장 | Constraint + Scoreboard + Coverage | axi_base_test / multi_beat_rand | 완료 | |
 | 10 | Unaligned Address Write Transfer | Unaligned Address Transfer시 첫 beat의 유효한 Lane만 Write | Constraint + Scoreboard + Coverage | axi_base_test / multi_beat_rand | 완료 | |
 | 11 | Unaligned Address Read Transfer | Unaligned Address Transfer시 첫 beat의 유효한 Lane만 Read | Constraint + Scoreboard + Coverage | axi_base_test / multi_beat_rand | 완료 | |
 | 12 | FIXED Burst | 모든 beat가 같은 주소에 쓰이고, read 시 마지막 beat 데이터와 일치 | Scoreboard + Coverage | axi_base_test / multi_beat_rand | 완료 | |
