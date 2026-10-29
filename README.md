@@ -17,7 +17,8 @@
 - **Scripting**: Windows Batch (regression, log parsing, coverage merge)
 
 ## Architecture
-<img width="1280" height="720" alt="슬라이드1" src="https://github.com/user-attachments/assets/639a3b83-a88c-47da-8475-d173c9b772b2" />
+
+<img width="1280" height="720" alt="Axi4_ram IP검증 Block Diagram" src="https://github.com/user-attachments/assets/06a53373-648f-4410-b44b-ab5569d27ac4" />
 
 ## Key Features
 #### Independent Channel Handshake
