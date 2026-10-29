@@ -5,7 +5,7 @@
 - Verification Plan 기반으로 handshake, burst(INCR/FIXED), narrow·unaligned 전송을 constrained random으로 검증
 - spec 기반 SVA protocol checker로 버스 프로토콜 규칙 검증
 - spec 기반 바이트 단위 메모리를 모델링하여 scoreboard로 write-read 데이터 무결성 검증
-- seed 기반 regression으로 coverage hole을 분석하고 보완하여 functional coverage [90%] closure
+- seed 기반 regression으로 coverage hole을 분석하고 보완하여 functional coverage [90%] 달성
 
 ### Language and Tools
 
