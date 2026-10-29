@@ -42,11 +42,12 @@ class axi_coverage extends uvm_subscriber #(axi_base_item);
         }
         
         //---------------------write operation timing 경우의 수---------------------
-        cp_aw_timing : coverpoint (longint'(tr.aw_time) - longint'(tr.w_time)) iff(tr.dir==AXI_WRITE) {
-            bins aw_first = {[$:-1]};   // AW가 먼저 
-            bins same     = {0};        // 같은 클럭
-            bins w_first  = {[1:$]};    // W가 먼저 
-        }         
+        cp_aw_timing : coverpoint ((tr.aw_time < tr.w_time)  ? 0 :
+                                (tr.aw_time == tr.w_time) ? 1 : 2) iff (tr.dir == AXI_WRITE) {
+            bins aw_first = {0};   // AW가 먼저
+            bins same     = {1};   // 같은 클럭
+            bins w_first  = {2};   // W가 먼저
+        }     
     endgroup
 
 
@@ -155,11 +156,26 @@ class axi_coverage extends uvm_subscriber #(axi_base_item);
                                         binsof(cp_r_len)   intersect {[16:255]};
         }
         //---------------------size × aligned (INCR / FIXED 각각)---------------------
-        cx_w_incr_size_aligned  : cross cp_w_size, cp_w_aligned iff(tr.burst==INCR);
-        cx_r_incr_size_aligned  : cross cp_r_size, cp_r_aligned iff(tr.burst==INCR);
+        cx_w_incr_size_aligned  : cross cp_w_size, cp_w_aligned iff(tr.burst==INCR){
+            ignore_bins size0_unaligned = binsof(cp_w_size) intersect {0} &&
+                binsof(cp_w_aligned) intersect {[1:3]};
+            ignore_bins size1_unaligned = binsof(cp_w_size) intersect {1} &&
+                binsof(cp_w_aligned) intersect {[2:3]};
+        } //size 0일때 1~3 unaligend address case 발생 불가능 1일 때 또한 {2~3} case 발생 불가능
+        cx_r_incr_size_aligned  : cross cp_r_size, cp_r_aligned iff(tr.burst==INCR){
+            ignore_bins size_0_unaligned = binsof(cp_r_size) intersect {0} &&
+                binsof(cp_r_aligned) intersect {[1:3]};
+            ignore_bins size_1_unaligend = binsof(cp_r_size) intersect {1} &&
+                binsof(cp_r_aligned) intersect {[2:3]};
+        }
  
         // FIXED는 write만 : narrow면 매 beat 같은 lane, unaligned면 매 beat 같은 일부 strobe 반복
-        cx_w_fixed_size_aligned : cross cp_w_size, cp_w_aligned iff(tr.burst==FIXED);
+        cx_w_fixed_size_aligned : cross cp_w_size, cp_w_aligned iff(tr.burst==FIXED){
+            ignore_bins size0_unaligned = binsof(cp_w_size) intersect {0} &&
+                binsof(cp_w_aligned) intersect {[1:3]};
+            ignore_bins size1_unaligned = binsof(cp_w_size) intersect {1} &&
+                binsof(cp_w_aligned) intersect {[2:3]};
+        }
         
     endgroup
     
@@ -183,7 +199,7 @@ class axi_coverage extends uvm_subscriber #(axi_base_item);
         //---------------------handshake---------------------
         `uvm_info("COV", $sformatf("handshake coverage total : %0.2f%%", cg_hs.get_inst_coverage()), UVM_LOW)
 
-        //---------------------burst---------------------
+        //---------------------multi_beat---------------------
         `uvm_info("COV", $sformatf("burst coverage total : %0.2f%%", multi_beat.get_inst_coverage()), UVM_LOW)
 
         /*
