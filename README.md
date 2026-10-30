@@ -67,7 +67,7 @@
 
 ## Result
 
-Functional Coverage: 90%
+__Functional Coverage: 90%__
 
 #### Coverage Report
 <img width="1902" height="518" alt="image" src="https://github.com/user-attachments/assets/0a9079a8-b737-4417-8b2d-aa05b62f7d42" />
