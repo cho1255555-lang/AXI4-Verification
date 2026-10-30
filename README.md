@@ -57,5 +57,27 @@
 | 17 | BRESP | Write Transaction 완료시 00 OKAY response 확인 | Scoreboard | axi_base_test / multi_beat_rand | 완료 | |
 | 18 | RRESP | Read Transaction 완료시 00 OKAY response 확인 | Scoreboard | axi_base_test / multi_beat_rand | 완료 | |
 
+## Regression & Coverage
+
+- Seed 기반 Random Regression 수행
+- 각 Seed별 Functional Coverage 수집
+- xcrg를 이용하여 Coverage Merge
+- HTML Report를 통한 Coverage Hole 분석
+- 미달성 항목을 분석하고 추가 Sequence를 작성하여 보완
+
 ## Result
+
+Functional Coverage: 90%
+
+#### Coverage Report
 <img width="1902" height="518" alt="image" src="https://github.com/user-attachments/assets/0a9079a8-b737-4417-8b2d-aa05b62f7d42" />
+
+#### Covergroup 별 Coverage Report
+<img width="938" height="739" alt="image" src="https://github.com/user-attachments/assets/50f5cf5b-4597-43a8-8122-d7ec08b3bb19" />
+<img width="1865" height="907" alt="image" src="https://github.com/user-attachments/assets/3b329a37-48d8-4132-8eb9-c2160207c8f2" />
+
+#### Log기반 Scoreboard 검증
+<img width="448" height="140" alt="image" src="https://github.com/user-attachments/assets/34863938-8a4d-4423-b99c-3c42aec593c0" />
+
+Seed별 Simulation Log 결과를 통해 Scoreboard Data Mismatch 0건 확인
+
