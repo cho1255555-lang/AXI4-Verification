@@ -2,7 +2,7 @@
 
 오픈소스 AXI4 slave RAM([verilog-axi](https://github.com/alexforencich/verilog-axi)의 `axi_ram`)을 DUT로, 직접 설계한 UVM AXI4 Master Agent로 검증한 프로젝트입니다.
 
-- Verification Plan 기반으로 handshake, burst(INCR/FIXED), narrow·unaligned 전송을 constrained random으로 검증
+- Verification Plan 기반으로 handshake, burst(INCR/FIXED), narrow, unaligned 전송을 constrained random으로 검증
 - spec 기반 SVA protocol checker로 버스 프로토콜 규칙 검증
 - spec 기반 바이트 단위 메모리를 모델링하여 scoreboard로 write-read 데이터 무결성 검증
 - seed 기반 regression으로 coverage hole을 분석하고 보완하여 functional coverage [90%] 달성
@@ -80,4 +80,70 @@ __Functional Coverage: 90%__
 <img width="448" height="140" alt="image" src="https://github.com/user-attachments/assets/34863938-8a4d-4423-b99c-3c42aec593c0" />
 
 Seed별 Simulation Log 결과를 통해 Scoreboard Data Mismatch 0건 확인
+
+## Issues & Solutions
+
+### Issue 1. Cross Coverage에서 도달할 수 없는 Bin 발생
+
+**문제 상황**
+- Multi-beat Coverage에서 Size × Unaligned Offset Cross Coverage의 일부 Bin이 채워지지 않음
+<img width="492" height="398" alt="스크린샷 2026-10-27 203834" src="https://github.com/user-attachments/assets/c90a7076-407c-4460-9c9b-c7f98abdc314" />
+
+
+**분석**
+- Unaligned 여부는 Transfer Size에 따른 정렬 기준으로 결정됨
+- Size=0: Beat 크기가 1 Byte이므로 모든 주소가 정렬 상태이며 Unaligned Transfer가 발생할 수 없음
+- Size=1: Beat 크기가 2 Byte이므로 Offset은 0 또는 1만 가능하며 Offset=1인 경우에만 Unaligned Transfer가 발생함
+
+**원인**
+- Transfer Size에 따라 달라지는 유효 Offset 범위를 고려하지 않고 모든 Offset 조합을 Cross Bin으로 설정함
+
+**해결**
+- AXI4 Specification을 기준으로 발생할 수 없는 조합을 ignore_bins로 처리하여 Coverage에서 제외함
+
+**배운 점**
+- Cross Coverage를 설계할 때는 단순히 변수 간 조합을 생성하는 것이 아니라 Specification을 기준으로 각 조합의 유효성을 먼저 판단해야한다는 것을 깨달음
+
+---
+
+### Issue 2. AW, W Channel Handshake Timing Coverage Hole 발생
+
+**문제 상황**
+- AW/W Handshake 순서 Coverage에서 **AW 선행** Bin만 수집되고, **W 선행**과 **동시 Handshake** Bin은 채워지지 않음
+
+**분석**
+- Coverage Hole의 원인을 파악하기 위해 DUT의 AW, W Handshake 처리 로직을 분석함
+- 그 결과 AW Handshake가 완료된 이후에 WREADY를 Assert하는 구조임을 확인함
+<img width="819" height="351" alt="스크린샷 2026-10-30 211050" src="https://github.com/user-attachments/assets/09613f17-c5e4-4775-966e-8ae60dd25a54" />
+
+
+**원인**
+- AXI4 Specification은 AW와 W 채널의 독립적인 Handshake를 허용하지만 해당 DUT는 AW Handshake가 완료되어야 WREADY를 Assert하므로 W 선행 및 동시 Handshake가 발생할 수 없음
+
+**해결**
+-  DUT의 동작 구조를 확인했고 해당 DUT에서 발생할 수 없는 Handshake 조합임을 확인하고 Coverage bin은 남겨놓지만 Verification Plan에 issue 명시
+
+**배운 점**
+- Coverage Hole이 반드시 Random Stimulus 부족을 의미하지는 않음. DUT의 설계 구조에 따라 도달할 수 없는 시나리오가 존재할 수 있으므로 RTL 분석을 통한 원인 파악도 필요하다는 것을 깨달음
+
+---
+
+### Issue 3. WRAP Burst Read 시 Scoreboard Data Mismatch 발생
+
+**문제 상황**
+- UVM Report Summary에서 Scoreboard Component의 Data Mismatch UVM_ERROR 발생을 확인함
+
+**분석**
+- Simulation Log를 통해 Mismatch가 발생한 Read Transaction을 추적하고 해당 주소에 대한 이전 Write Transaction을 확인함
+<img width="1438" height="606" alt="스크린샷 2026-10-25 151054" src="https://github.com/user-attachments/assets/e82ce978-4cd3-44bb-bc0d-a91ab746d056" />
+
+
+**원인**
+- 해당 DUT는 FIXED와 INCR Burst만 지원하며, WRAP Burst는 지원하지 않음
+
+**해결**
+- WRAP Burst를 DUT 미지원 항목으로 Verification Plan에 issue를 명시하고 이후 Regression은 FIXED와 INCR Burst를 대상으로 진행
+
+**배운 점**
+- Scoreboard에서 Data Mismatch가 발생하면 단순히 오류 여부만 확인할 것이 아니라, Simulation Log로 Transaction 흐름을 추적하고 DUT의 지원 범위와 비교하여 원인을 분석하는 과정이 중요함을 깨달음
 
