@@ -1,11 +1,23 @@
-## Overview
+# Contents
+- [Overview](#overview)
+- [Architecture](#architecture)
+- [Key Features](#key-features)
+- [Verification Plan](#verification-plan)
+- [Regression & Coverage](#regression--coverage)
+- [Result](#result)
+- [Issues & Solutions](#issues--solutions)
+  - [Issue 1. Cross Coverage에서 도달할 수 없는 Bin 발생](#issue-1-cross-coverage에서-도달할-수-없는-bin-발생)
+  - [Issue 2. AW, W Channel Handshake Timing Coverage Hole 발생](#issue-2-aw-w-channel-handshake-timing-coverage-hole-발생)
+  - [Issue 3. WRAP Burst Read 시 Scoreboard Data Mismatch 발생](#issue-3-wrap-burst-read-시-scoreboard-data-mismatch-발생)
+
+# Overview
 
 오픈소스 AXI4 slave RAM([verilog-axi](https://github.com/alexforencich/verilog-axi)의 `axi_ram`)을 DUT로, 직접 설계한 UVM AXI4 Master Agent로 검증한 프로젝트입니다.
 
-- Verification Plan 기반으로 handshake, burst(INCR/FIXED), narrow, unaligned 전송을 constrained random으로 검증
-- spec 기반 SVA protocol checker로 버스 프로토콜 규칙 검증
-- spec 기반 바이트 단위 메모리를 모델링하여 scoreboard로 write-read 데이터 무결성 검증
-- seed 기반 regression으로 coverage hole을 분석하고 보완하여 functional coverage [90%] 달성
+- Verification Plan 기반으로 Handshake, Burst(INCR/FIXED), Narrow Transfer, Unaligned 전송을 Constrained Random Sequence로 Functional Coverage 검증
+- spec 기반 SVA Protocol Checker로 버스 프로토콜 규칙 검증
+- spec 기반 바이트 단위 메모리를 모델링하여 Scoreboard로 Write-Read 데이터 무결성 검증
+- seed 기반 Regression으로 Coverage Hole을 분석하고 보완하여 Functional Coverage [90%] 달성
 
 ### Language and Tools
 
@@ -13,23 +25,24 @@
 - **Methodology**: UVM 1.2
 - **Assertions**: SystemVerilog Assertions (SVA)
 - **Simulators**: Cadence Xcelium (EDA Playground), Vivado xsim 2023.2
-- **Coverage**: xcrg (functional coverage merge / HTML report)
-- **Scripting**: Windows Batch (regression, log parsing, coverage merge)
+- **Coverage**: xcrg (Functional Coverage Merge / HTML Report)
 
-## Architecture
+# Architecture
 
-<img width="1280" height="720" alt="Axi4_ram IP검증 Block Diagram" src="https://github.com/user-attachments/assets/06a53373-648f-4410-b44b-ab5569d27ac4" />
+<img width="1280" height="720" alt="Axi4_ram IP검증 Block Diagram" src="https://github.com/user-attachments/assets/403860d7-ca4e-4c28-8fcf-b3b7e2346949" />
 
-## Key Features
-#### Independent Channel Handshake
-#### Burst Transaction
+
+# Key Features
+#### 1. Independent Channel Handshake
+#### 2. Burst Transaction
 -FIXED
 -INCR
 -WRAP
-#### Unaligned Transfer
-#### Narrow Transfer
+#### 3. Unaligned Transfer
+#### 4. Narrow Transfer
 
-## Verification Plan
+
+# Verification Plan
 
 | No | Feature | 검증 내용 | 검증 방법 | Test / Sequence | 상태 | 비고 |
 |:---:|---|---|---|---|:---:|---|
@@ -57,36 +70,45 @@
 | 17 | BRESP | Write Transaction 완료시 00 OKAY response 확인 | Scoreboard | axi_base_test / multi_beat_rand | 완료 | |
 | 18 | RRESP | Read Transaction 완료시 00 OKAY response 확인 | Scoreboard | axi_base_test / multi_beat_rand | 완료 | |
 
-## Regression & Coverage
+# Regression & Coverage
 
-- Seed 기반 Random Regression 수행
+- Seed 기반 Regression 수행
 - 각 Seed별 Functional Coverage 수집
 - xcrg를 이용하여 Coverage Merge
 - HTML Report를 통한 Coverage Hole 분석
 - 미달성 항목을 분석하고 추가 Sequence를 작성하여 보완
 
-## Result
+# Result
 
-__Functional Coverage: 90%__
+- **Functional Coverage: 90%**
 
-#### Coverage Report
-<img width="1902" height="518" alt="image" src="https://github.com/user-attachments/assets/0a9079a8-b737-4417-8b2d-aa05b62f7d42" />
+### Coverage Report
+<img width="263" height="147" alt="image" src="https://github.com/user-attachments/assets/a8dd220f-f12e-4e24-96da-7739cb49d917" />
 
-#### Covergroup 별 Coverage Report
-<img width="938" height="739" alt="image" src="https://github.com/user-attachments/assets/50f5cf5b-4597-43a8-8122-d7ec08b3bb19" />
-<img width="1865" height="907" alt="image" src="https://github.com/user-attachments/assets/3b329a37-48d8-4132-8eb9-c2160207c8f2" />
+### Covergroup 별 Coverage Report
 
-#### Log기반 Scoreboard 검증
-<img width="448" height="140" alt="image" src="https://github.com/user-attachments/assets/34863938-8a4d-4423-b99c-3c42aec593c0" />
+<img width="599" height="797" alt="image" src="https://github.com/user-attachments/assets/5be288cf-d931-4af0-85c8-80efa6e5f135" />
+[Uploading xcrg.log…]()
 
-Seed별 Simulation Log 결과를 통해 Scoreboard Data Mismatch 0건 확인
+<img width="907" height="376" alt="image" src="https://github.com/user-attachments/assets/62dec4ca-648e-40bd-ae49-78735fb99eec" />
+<img width="491" height="284" alt="image" src="https://github.com/user-attachments/assets/b2db293e-83cc-49e6-94b3-34617c8b9c3c" />
 
-## Issues & Solutions
 
-### Issue 1. Cross Coverage에서 도달할 수 없는 Bin 발생
+
+### Log기반 Scoreboard 검증
+<img width="444" height="155" alt="image" src="https://github.com/user-attachments/assets/dbcceb2e-6041-42eb-80c5-3f957244360c" />
+
+
+- Seed별 Simulation Log 결과를 통해 Scoreboard Data Mismatch 0건 확인
+
+# Issues & Solutions
+
+
+## Issue 1. Cross Coverage에서 도달할 수 없는 Bin 발생
 
 **문제 상황**
 - Multi-beat Coverage에서 Size × Unaligned Offset Cross Coverage의 일부 Bin이 채워지지 않음
+
 <img width="492" height="398" alt="스크린샷 2026-10-27 203834" src="https://github.com/user-attachments/assets/c90a7076-407c-4460-9c9b-c7f98abdc314" />
 
 
@@ -104,9 +126,9 @@ Seed별 Simulation Log 결과를 통해 Scoreboard Data Mismatch 0건 확인
 **배운 점**
 - Cross Coverage를 설계할 때는 단순히 변수 간 조합을 생성하는 것이 아니라 Specification을 기준으로 각 조합의 유효성을 먼저 판단해야한다는 것을 깨달음
 
----
 
-### Issue 2. AW, W Channel Handshake Timing Coverage Hole 발생
+
+## Issue 2. AW, W Channel Handshake Timing Coverage Hole 발생
 
 **문제 상황**
 - AW/W Handshake 순서 Coverage에서 **AW 선행** Bin만 수집되고, **W 선행**과 **동시 Handshake** Bin은 채워지지 않음
@@ -114,7 +136,8 @@ Seed별 Simulation Log 결과를 통해 Scoreboard Data Mismatch 0건 확인
 **분석**
 - Coverage Hole의 원인을 파악하기 위해 DUT의 AW, W Handshake 처리 로직을 분석함
 - 그 결과 AW Handshake가 완료된 이후에 WREADY를 Assert하는 구조임을 확인함
-<img width="819" height="351" alt="스크린샷 2026-10-30 211050" src="https://github.com/user-attachments/assets/09613f17-c5e4-4775-966e-8ae60dd25a54" />
+<img width="1280" height="720" alt="Axi4_ram IP검증 Block Diagram" src="https://github.com/user-attachments/assets/cd13ca29-da5c-4d7a-8c7e-4a66ca609042" />
+
 
 
 **원인**
@@ -126,9 +149,9 @@ Seed별 Simulation Log 결과를 통해 Scoreboard Data Mismatch 0건 확인
 **배운 점**
 - Coverage Hole이 반드시 Random Stimulus 부족을 의미하지는 않음. DUT의 설계 구조에 따라 도달할 수 없는 시나리오가 존재할 수 있으므로 RTL 분석을 통한 원인 파악도 필요하다는 것을 깨달음
 
----
 
-### Issue 3. WRAP Burst Read 시 Scoreboard Data Mismatch 발생
+
+## Issue 3. WRAP Burst Read 시 Scoreboard Data Mismatch 발생
 
 **문제 상황**
 - UVM Report Summary에서 Scoreboard Component의 Data Mismatch UVM_ERROR 발생을 확인함
