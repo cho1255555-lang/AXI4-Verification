@@ -88,7 +88,7 @@
 ### Covergroup 별 Coverage Report
 
 <img width="599" height="797" alt="image" src="https://github.com/user-attachments/assets/5be288cf-d931-4af0-85c8-80efa6e5f135" />
-[Uploading xcrg.log…]()
+
 
 <img width="907" height="376" alt="image" src="https://github.com/user-attachments/assets/62dec4ca-648e-40bd-ae49-78735fb99eec" />
 <img width="491" height="284" alt="image" src="https://github.com/user-attachments/assets/b2db293e-83cc-49e6-94b3-34617c8b9c3c" />
