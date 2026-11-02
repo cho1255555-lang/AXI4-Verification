@@ -73,7 +73,7 @@ module tb_top;
     axi_protocol_checker #(.MAX_WAIT(100)) u_chk (
     .aclk     (aclk),
     .areset_n (areset_n),
-    .s_axi    (vif)
+    .vif    (vif)
     );
 
     initial  aclk = 0;

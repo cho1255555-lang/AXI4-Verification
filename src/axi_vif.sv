@@ -98,4 +98,12 @@ interface axi_vif (input logic aclk, input logic areset_n);
 		output bresp, bvalid, input bready
 	);
 
+	modport check (
+		input awvalid, awready, awaddr, awsize, awlen, awburst,
+		input wvalid, wready, wdata, wstrb, wlast,
+		input bvalid, bready, bresp, bid,
+		input arvalid, arready, araddr, arsize, arlen, arburst,
+		input rvalid, rready, rdata, rresp, rlast, rid,
+	);
+
 endinterface

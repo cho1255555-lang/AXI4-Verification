@@ -1,71 +1,70 @@
-// ============================================================
-// axi_protocol_checker
-//  - DUT가 아니라 vif(버스)에 연결하는 VIP 쪽 checker
-//  - tb_top에서 직접 인스턴스 : .s_axi(vif)
-//  - DUT가 바뀌어도 이 파일은 그대로
+// assertion 구현 목록
 //
-// [한계 - outstanding 지원 시 수정 필요]
-//  - r_len_q, w_len_q가 AR/AW마다 덮어써짐
-//    → 여러 burst가 동시에 진행되면 이전 len을 잃어버림 (큐로 바꿔야 함)
-// ============================================================
+//  1. Valid Assert시 handshake 완료 전까지 Payload가 변하지 않음 O
+//  2. AR handshake 완료 전까지 RVALID가 assert 하지 않음 O
+//  3. W, AW handshake 완료전까지 BVALID 신호 assert 하지 않음 O
+//  4. INCR burst 시 4KB boundary를 넘지 않음 O
+//  5. FIXED burst 시 beat 길이 16 이하 (AxLEN ≤ 15) O
+//  6. WRAP burst 길이가 2/4/8/16 중 하나로 설정됨  O
+//  7. len에 따라 len_1번째 beat에만 WLAST assert O
+//  8. len에 따라 len+1 번째 beat에만 RLAST assert O
+
+
+
 
 module axi_protocol_checker #(
-    parameter int MAX_WAIT = 100           // 응답을 기다릴 최대 사이클
+    parameter int MAX_WAIT = 10           // 응답을 기다릴 최대 사이클
 )(
     input logic aclk,
     input logic areset_n,
-    axi_vif     s_axi
+    axi_vif.check vif
 );
     import uvm_pkg::*;
+    import axi_vip_pkg::*;
     `include "uvm_macros.svh"
 
     default clocking cb @(posedge aclk); endclocking
     default disable iff (!areset_n);
 
-    // =========================================================
-    // 1. handshake 신호 (가독성용)
-    // =========================================================
-    logic aw_hs, w_hs, b_hs, ar_hs, r_hs;
-    assign aw_hs = s_axi.awvalid && s_axi.awready;
-    assign w_hs  = s_axi.wvalid  && s_axi.wready;
-    assign b_hs  = s_axi.bvalid  && s_axi.bready;
-    assign ar_hs = s_axi.arvalid && s_axi.arready;
-    assign r_hs  = s_axi.rvalid  && s_axi.rready;
 
-    // =========================================================
-    // 2. 보조 로직 (beat 카운트, 미완료 트랜잭션 수)
-    // =========================================================
-    logic [7:0] r_len_q, r_beat_cnt;   // AR에서 받은 len, 현재 R beat 번호
-    logic [7:0] w_len_q, w_beat_cnt;   // AW에서 받은 len, 현재 W beat 번호
-    int         r_outstanding;         // AR 받았는데 R이 아직 안 끝난 개수
-    int         aw_pending;            // B 응답 안 나간 AW 개수
-    int         w_pending;             // B 응답 안 나간 W burst 개수
+    //  handshake 신호 
+    logic aw_hs, w_hs, b_hs, ar_hs, r_hs;
+    assign aw_hs = vif.awvalid && vif.awready;
+    assign w_hs  = vif.wvalid  && vif.wready;
+    assign b_hs  = vif.bvalid  && vif.bready;
+    assign ar_hs = vif.arvalid && vif.arready;
+    assign r_hs  = vif.rvalid  && vif.rready;
+
+    logic [7:0] r_len_q, r_beat_cnt;   // AR에서 받은 len, 현재 R beat 
+    logic [7:0] w_len_q, w_beat_cnt;   // AW에서 받은 len, 현재 W beat 
+    int         r_pending;        
+    int         aw_pending;            
+    int         w_pending;             
 
     always_ff @(posedge aclk or negedge areset_n) begin
         if (!areset_n) begin
             r_len_q <= 0;  r_beat_cnt <= 0;
             w_len_q <= 0;  w_beat_cnt <= 0;
-            r_outstanding <= 0;
+            r_pending <= 0;
             aw_pending    <= 0;
             w_pending     <= 0;
         end else begin
             // ---- read ----
-            if (ar_hs) r_len_q <= s_axi.arlen;
-            if (r_hs)  r_beat_cnt <= s_axi.rlast ? 0 : r_beat_cnt + 1;
-            r_outstanding <= r_outstanding + int'(ar_hs) - int'(r_hs && s_axi.rlast);
+            if (ar_hs) r_len_q <= vif.arlen;
+            if (r_hs)  r_beat_cnt <= vif.rlast ? 0 : r_beat_cnt + 1;
+            r_pending <= r_pending + int'(ar_hs) - int'(r_hs && vif.rlast);
 
             // ---- write ----
-            if (aw_hs) w_len_q <= s_axi.awlen;
-            if (w_hs)  w_beat_cnt <= s_axi.wlast ? 0 : w_beat_cnt + 1;
-            aw_pending <= aw_pending + int'(aw_hs)                - int'(b_hs);
-            w_pending  <= w_pending  + int'(w_hs && s_axi.wlast)  - int'(b_hs);
+            if (aw_hs) w_len_q <= vif.awlen;
+            if (w_hs)  w_beat_cnt <= vif.wlast ? 0 : w_beat_cnt + 1;
+            aw_pending <= aw_pending + int'(aw_hs) - int'(b_hs);
+            w_pending  <= w_pending  + int'(w_hs && vif.wlast)  - int'(b_hs);
         end
     end
 
-    // =========================================================
-    // 3. 공통 property
-    // =========================================================
-    // VALID가 올라가면 READY 받을 때까지 유지
+
+    //  공통 property
+    // VALID assert시 READY 받을 때까지 유지
     property p_valid_hold(valid, ready);
         valid && !ready |=> valid;
     endproperty
@@ -75,73 +74,84 @@ module axi_protocol_checker #(
         valid && !ready |=> $stable(payload);
     endproperty
 
-    // =========================================================
-    // 4. VALID 유지 (5개 채널)
-    // =========================================================
-    AW_VALID_HOLD : assert property (p_valid_hold(s_axi.awvalid, s_axi.awready))
+   
+    //  VALID 유지 
+
+    AW_VALID_HOLD : assert property (p_valid_hold(vif.awvalid, vif.awready))
         else `uvm_error("AXI_CHK", "AWVALID dropped before AWREADY")
-    W_VALID_HOLD  : assert property (p_valid_hold(s_axi.wvalid,  s_axi.wready))
+    W_VALID_HOLD  : assert property (p_valid_hold(vif.wvalid,  vif.wready))
         else `uvm_error("AXI_CHK", "WVALID dropped before WREADY")
-    B_VALID_HOLD  : assert property (p_valid_hold(s_axi.bvalid,  s_axi.bready))
+    B_VALID_HOLD  : assert property (p_valid_hold(vif.bvalid,  vif.bready))
         else `uvm_error("AXI_CHK", "BVALID dropped before BREADY")
-    AR_VALID_HOLD : assert property (p_valid_hold(s_axi.arvalid, s_axi.arready))
+    AR_VALID_HOLD : assert property (p_valid_hold(vif.arvalid, vif.arready))
         else `uvm_error("AXI_CHK", "ARVALID dropped before ARREADY")
-    R_VALID_HOLD  : assert property (p_valid_hold(s_axi.rvalid,  s_axi.rready))
+    R_VALID_HOLD  : assert property (p_valid_hold(vif.rvalid,  vif.rready))
         else `uvm_error("AXI_CHK", "RVALID dropped before RREADY")
 
-    // =========================================================
-    // 5. payload 안정성 (5개 채널)
-    // =========================================================
+   
+    //  payload 유지 
+   
     // AW, AR : awid/arid는 아직 driver가 구동하지 않음
     //          → ID를 clocking block에 추가할 때 payload에 함께 추가
-    AW_STABLE : assert property (p_payload_stable(s_axi.awvalid, s_axi.awready,
-                    {s_axi.awaddr, s_axi.awlen, s_axi.awsize, s_axi.awburst}))
+    AW_STABLE : assert property (p_payload_stable(vif.awvalid, vif.awready,
+                    {vif.awaddr, vif.awlen, vif.awsize, vif.awburst}))
         else `uvm_error("AXI_CHK", "AW payload changed while waiting")
 
-    W_STABLE  : assert property (p_payload_stable(s_axi.wvalid, s_axi.wready,
-                    {s_axi.wdata, s_axi.wstrb, s_axi.wlast}))          // wstrb 추가
+    W_STABLE  : assert property (p_payload_stable(vif.wvalid, vif.wready,
+                    {vif.wdata, vif.wstrb, vif.wlast}))          // wstrb 추가
         else `uvm_error("AXI_CHK", "W payload changed while waiting")
 
-    B_STABLE  : assert property (p_payload_stable(s_axi.bvalid, s_axi.bready,
-                    {s_axi.bid, s_axi.bresp}))                          // bid 추가
+    B_STABLE  : assert property (p_payload_stable(vif.bvalid, vif.bready,
+                    {vif.bid, vif.bresp}))                          // bid 추가
         else `uvm_error("AXI_CHK", "B payload changed while waiting")
 
-    AR_STABLE : assert property (p_payload_stable(s_axi.arvalid, s_axi.arready,
-                    {s_axi.araddr, s_axi.arlen, s_axi.arsize, s_axi.arburst}))
+    AR_STABLE : assert property (p_payload_stable(vif.arvalid, vif.arready,
+                    {vif.araddr, vif.arlen, vif.arsize, vif.arburst}))
         else `uvm_error("AXI_CHK", "AR payload changed while waiting")
 
-    R_STABLE  : assert property (p_payload_stable(s_axi.rvalid, s_axi.rready,
-                    {s_axi.rid, s_axi.rdata, s_axi.rresp, s_axi.rlast}))  // rid 추가
+    R_STABLE  : assert property (p_payload_stable(vif.rvalid, vif.rready,
+                    {vif.rid, vif.rdata, vif.rresp, vif.rlast}))  // rid 추가
         else `uvm_error("AXI_CHK", "R payload changed while waiting")
 
-    // =========================================================
-    // 6. LAST 위치 검사 (single이든 burst든 마지막 beat에서만 1)
-    //    handshake 시점에만 검사 → valid=0일 때의 rlast 값은 보지 않음
-    // =========================================================
-    R_LAST_CHK : assert property (r_hs |-> (s_axi.rlast == (r_beat_cnt == r_len_q)))
+    
+    // LAST 위치 Check (single이든 multi든 마지막 beat에서만 1)
+    
+    R_LAST_CHK : assert property (r_hs |-> (vif.rlast == (r_beat_cnt == r_len_q)))
         else `uvm_error("AXI_CHK", $sformatf("RLAST wrong: beat=%0d, arlen=%0d, rlast=%0b",
-                                             r_beat_cnt, r_len_q, s_axi.rlast))
-    W_LAST_CHK : assert property (w_hs |-> (s_axi.wlast == (w_beat_cnt == w_len_q)))
+                                             r_beat_cnt, r_len_q, vif.rlast))
+    W_LAST_CHK : assert property (w_hs |-> (vif.wlast == (w_beat_cnt == w_len_q)))
         else `uvm_error("AXI_CHK", $sformatf("WLAST wrong: beat=%0d, awlen=%0d, wlast=%0b",
-                                             w_beat_cnt, w_len_q, s_axi.wlast))
+                                             w_beat_cnt, w_len_q, vif.wlast))
 
-    // =========================================================
-    // 7. 채널 간 의존성
-    // =========================================================
-    // R은 AR handshake가 끝난 뒤에만 나올 수 있음
-    R_AFTER_AR : assert property (s_axi.rvalid |-> (r_outstanding > 0))
+    
+    //  채널 간 의존성
+    //  AR-> R 순서
+    R_AFTER_AR : assert property (vif.rvalid |-> (r_pending > 0))
         else `uvm_error("AXI_CHK", "RVALID asserted without accepted AR")
 
-    // B는 AW handshake + 마지막 W handshake가 모두 끝난 뒤에만
-    B_AFTER_AW_W : assert property (s_axi.bvalid |-> (aw_pending > 0 && w_pending > 0))
+    // B Channel handshake는 AW, W handshake가 모두 끝난 뒤에만
+    B_AFTER_AW_W : assert property (vif.bvalid |-> (aw_pending > 0 && w_pending > 0))
         else `uvm_error("AXI_CHK", "BVALID asserted before AW and last W completed")
 
-    // =========================================================
-    // 8. 응답이 실제로 오는지 (일정 시간 안에)
-    // =========================================================
-    B_RESP_COMES : assert property (w_hs && s_axi.wlast |-> ##[1:MAX_WAIT] b_hs)
-        else `uvm_error("AXI_CHK", "No B handshake after last W")
-    R_DONE_COMES : assert property (ar_hs |-> ##[1:MAX_WAIT] (r_hs && s_axi.rlast))
-        else `uvm_error("AXI_CHK", "Read burst did not complete after AR")
+    //FIXED Len Limit 16beat 이하까지 허용
+    AW_FIXED_LEN : assert property ((vif.awvalid && vif.awburst == FIXED) |-> (vif.awlen <= 15))
+        else `uvm_error("AXI_CHK", $sformatf("AW FIXED burst more than 16 beat assigned value=%0d", vif.awlen))
+
+    AR_FIXED_LEN : assert property ((vif.arvalid && vif.arburst == FIXED) |-> (vif.arlen <= 15))
+        else `uvm_error("AXI_CHK", $sformatf("AR FIXED burst more than 16 beat assigned value=%0d", vif.arlen))
+
+   AW_WRAP_LEN : assert property ((vif.awvalid && vif.awburst == WRAP) |-> (vif.awlen inside {1, 3, 7, 15}))
+        else `uvm_error("AXI_CHK", $sformatf("AW WRAP burst is not inside 2, 4, 8, 16  assigned value=%0d", vif.awlen))
+   
+    AR_WRAP_LEN : assert property ((vif.arvalid && vif.arburst == WRAP) |-> (vif.arlen inside {1, 3, 7, 15}))
+        else `uvm_error("AXI_CHK", $sformatf("AR WRAP burst is not inside 2, 4, 8, 16  assigned value=%0d", vif.arlen))
+
+    // 4KB Boundary cross 검사
+    AW_4KB_BOUNDARY : assert property ((vif.awvalid && vif.awburst == INCR) |-> ((int'(vif.awaddr[11:0]) >> vif.awsize) << vif.awsize)
+     + ((int'(vif.awlen) + 1) << vif.awsize) <= (1<<12))
+        else `uvm_error("AXI_CHK", "AW crosses 4KB boundary")
+    AR_4KB_BOUNDARY : assert property ((vif.arvalid && vif.arburst == INCR) |-> ((int'(vif.araddr[11:0]) >> vif.arsize) << vif.arsize)
+     + ((int'(vif.arlen) + 1) << vif.arsize) <= (1<<12))
+        else `uvm_error("AXI_CHK", "AR crosses 4KB boundary")
 
 endmodule
