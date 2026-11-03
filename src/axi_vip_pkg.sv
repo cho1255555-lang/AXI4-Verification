@@ -17,13 +17,16 @@ package axi_vip_pkg;
     typedef bit [1:0] user_t;
     typedef enum bit [1:0] {FIXED, INCR, WRAP, RESERVED} burst_e;
     typedef enum bit {AXI_READ, AXI_WRITE} dir_e;
+    typedef enum {ERR_NONE, ERR_BURST_LEN, ERR_VALID_DROP, ERR_PAYLOAD_CHG, ERR_HS_DEP,ERR_WLAST} axi_err_e;
 
     
     `include "axi_cfg.sv"
     `include "axi_base_item.sv"
+    `include "err_inj_item.sv"
     `include "axi_seq_lib.sv"
     `include "axi_sequencer.sv"
     `include "axi_driver.sv"
+    `include "axi_err_driver.sv"
     `include "axi_monitor.sv"
     `include "axi_coverage.sv"
     `include "axi_agent.sv"

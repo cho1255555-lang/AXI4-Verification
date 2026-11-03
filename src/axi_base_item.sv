@@ -41,6 +41,8 @@ class axi_base_item extends uvm_sequence_item;
 	
 	rand bit is_aligned;
 
+	axi_err_e err_type; //checker 검증용
+
 	constraint c_align {
 		solve is_aligned before addr;
 		if (is_aligned) addr == ((addr >> size) << size);

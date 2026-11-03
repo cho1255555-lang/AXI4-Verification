@@ -49,6 +49,31 @@ class axi_rand_test extends axi_base_test;
     
 
 endclass
+
+class axi_err_test extends axi_base_test;
+    `uvm_component_utils(axi_err_test)
+
+    axi_err_e err_type = ERR_VALID_DROP;   // 이 테스트에서 넣을 에러
+
+    function new(string name, uvm_component parent);
+        super.new(name, parent);
+    endfunction
+
+    virtual function void build_phase(uvm_phase phase);
+        axi_driver::type_id::set_type_override(axi_err_driver::get_type());
+        super.build_phase(phase);
+    endfunction
+
+    virtual task run_phase(uvm_phase phase);
+        axi_err_seq seq;
+        phase.raise_objection(this);
+        seq = axi_err_seq::type_id::create("seq");
+        seq.err_type = err_type;  
+        seq.start(env.agt.sqcr);
+        #100ns;
+        phase.drop_objection(this);
+    endtask
+endclass
         
 
 

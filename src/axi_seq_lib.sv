@@ -92,6 +92,34 @@ class multi_beat_seq extends axi_base_seq;
 
 endclass
 
+class axi_err_seq extends axi_base_seq;
+    `uvm_object_utils(axi_err_seq)
+
+    axi_err_e err_type;   
+
+    function new(string name = "axi_err_seq");
+        super.new(name);
+    endfunction
+
+    virtual task body();
+        super.body();
+        req = err_inj_item::type_id::create("req");
+        start_item(req);
+        req.err_type = err_type;
+        if (!req.randomize() with {
+                burst == INCR;
+                is_aligned == 1;
+                awid       == 0;
+                arid       == 0;
+                size inside {[cfg.min_size:cfg.max_size]};
+                addr inside {[cfg.min_addr:cfg.max_addr]};
+            })
+            `uvm_fatal("RAND", "randomize error")
+        finish_item(req);
+        `uvm_info("ERR_SEQ", {err_type.name(), "\n", req.convert2string()}, UVM_LOW)
+    endtask
+
+endclass
 
 
             
