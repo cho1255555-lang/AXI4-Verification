@@ -11,7 +11,7 @@
 
 # Overview
 
-AXI4 Memory IP([verilog-axi](https://github.com/alexforencich/verilog-axi)의 `axi_ram`)를 DUT로 선정하여 AXI4 프로토콜의 주요 규칙에 따른 동작을 검증하는 프로젝트입니다. AXI4 Specification을 기준으로 Handshake, Burst, Narrow Transfer, Unaligned Transfer를 핵심 Feature로 선정하고 Verification Plan을 작성했습니다. 이를 바탕으로 UVM 기반 검증 환경을 구축하여 각 Feature에 대한 Functional Verification을 수행했습니다.
+AXI4 Memory IP([verilog-axi](https://github.com/alexforencich/verilog-axi)의 `axi_ram`)를 DUT로 선정하여 AXI4 프로토콜에 따른 동작을 검증하는 프로젝트입니다. AXI4 Specification을 기준으로 Handshake, Burst, Narrow Transfer, Unaligned Transfer를 핵심 Feature로 선정하고 Verification Plan을 작성했습니다. 이를 바탕으로 UVM 기반 검증 환경을 구축하여 각 Feature에 대한 Functional Verification을 수행했습니다.
 
 ### 주요 검증 내용
 
