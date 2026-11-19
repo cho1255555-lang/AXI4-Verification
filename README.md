@@ -123,7 +123,7 @@ AXI4 Memory IP([verilog-axi](https://github.com/alexforencich/verilog-axi)의 `a
 
 **문제 상황**
 - Scoreboard에서 Data Mismatch 발생
-- 에러는 모두 WRAP Burst에서 발생했지만 WRAP Burst 중에도 Match된 Case가 존재해 원인 특정 불가
+- Mismatch는 모두 WRAP Burst에서 발생했지만 WRAP Burst 중에도 Match된 Case가 존재해 원인 특정 불가
 
 **분석**
 - Scoreboard Log에서 WRAP Burst의 Match/Mismatch Transaction을 비교해 WRAP Boundary를 넘는 Transaction에서만 Mismatch가 발생함을 확인
@@ -156,7 +156,7 @@ AXI4 Memory IP([verilog-axi](https://github.com/alexforencich/verilog-axi)의 `a
 - Transfer Size에 따라 달라지는 유효 Offset 범위를 고려하지 않고 모든 Offset 조합을 Cross Bin으로 설정함
 
 **해결**
-- AXI4 Specification을 기준으로 발생할 수 없는 조합을 ignore_bins로 처리하여 Coverage에서 제외함
+- 발생할 수 없는 조합을 ignore_bins로 처리하여 Coverage에서 제외함
 
 **배운 점**
 - Cross Coverage를 설계할 때는 단순히 변수 간 조합을 생성하는 것이 아니라 Specification을 기준으로 각 조합의 유효성을 먼저 판단해야한다는 것을 깨달음
